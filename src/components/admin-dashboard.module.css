@@ -1,0 +1,12 @@
+.reportedMessage {
+  margin: 10px 0 4px;
+  padding: 9px 11px;
+  border-left: 2px solid var(--lime);
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 255, 255, 0.025);
+  color: #c9ccc2;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

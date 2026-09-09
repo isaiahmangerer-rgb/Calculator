@@ -1,0 +1,1 @@
+export default function NotFound() { return <main className="fatal-state"><div className="brand-mark"><span /></div><h1>Nothing lives here yet.</h1><p>The page may have moved or the conversation is no longer available.</p><a className="primary-button" href="/">Return home</a></main>; }
