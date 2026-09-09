@@ -9,7 +9,7 @@ Nexus is a production-oriented social search website built with Next.js 16, Type
 - Private two-person conversations with realtime history, last-message previews, typing-ready channels, read state, and database-enforced participant access.
 - Friend requests, accept/decline, removal, online presence, user blocking, local muting, and private reports.
 - Admin-only reports, account mutes/suspensions, message removal, room management, statistics, and an audit log. Access is checked in the route handler and Postgres.
-- Provider-based web search using the official Brave Search API. Results open the original website.
+- Provider-based web search using the official LangSearch Web Search API. Results open the original website.
 - Allowlisted metadata previews with protocol, port, DNS/IP, redirect, timeout, content-type, and response-size protections. Nexus is not a web proxy.
 - Dark and light themes, responsive sidebars/bottom navigation, loading/empty/error states, keyboard-friendly native controls, and social metadata.
 
@@ -32,8 +32,8 @@ Use `npm run check` for linting, TypeScript, unit/security contract tests, and t
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser-safe | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser-safe | Supabase anonymous key; RLS is still required |
 | `NEXT_PUBLIC_SITE_URL` | Browser-safe | Canonical deployed origin |
-| `BRAVE_SEARCH_API_KEY` | Server secret | Official Brave Search API credential |
-| `SEARCH_API_PROVIDER` | Server | Currently `brave`; provider interface is replaceable |
+| `LANGSEARCH_API_KEY` | Server secret | Free LangSearch Web Search API credential |
+| `SEARCH_API_PROVIDER` | Server | Currently `langsearch`; provider interface remains replaceable |
 | `ALLOWED_PREVIEW_DOMAINS` | Server | Comma-separated exact domains or `*.subdomain` rules |
 | `PREVIEW_TIMEOUT_MS` | Server | Metadata fetch timeout, capped at 10 seconds |
 | `PREVIEW_MAX_BYTES` | Server | Maximum metadata response size, capped at 2 MB |
@@ -58,7 +58,7 @@ Do not expose an admin-creation endpoint. Subsequent role changes can be perform
 
 ## Deployment to Vercel
 
-Import the GitHub repository into Vercel as a Next.js project. Add every variable from `.env.example` to the correct Vercel environments, using Secret storage for `BRAVE_SEARCH_API_KEY`. Apply the Supabase migration before inviting users. Set `NEXT_PUBLIC_SITE_URL` to the production URL and add `https://YOUR_DOMAIN/auth/callback` to Supabase’s redirect allowlist.
+Import the GitHub repository into Vercel as a Next.js project. Add every variable from `.env.example` to the correct Vercel environments, using Secret storage for `LANGSEARCH_API_KEY`. Create a free key from the [LangSearch API dashboard](https://langsearch.com/api-keys); LangSearch currently advertises free access without a credit card. Apply the Supabase migration before inviting users. Set `NEXT_PUBLIC_SITE_URL` to the production URL and add `https://YOUR_DOMAIN/auth/callback` to Supabase’s redirect allowlist.
 
 The default Vercel build command is `npm run build`. No desktop runtime, browser extension, unrestricted proxy, or filtering-bypass behavior is included.
 
@@ -67,7 +67,7 @@ The default Vercel build command is `npm run build`. No desktop runtime, browser
 - `src/app`: App Router pages and server route handlers.
 - `src/components`: responsive product surfaces and realtime clients.
 - `src/lib/supabase`: cookie-safe browser/server Supabase clients.
-- `src/lib/search`: replaceable search-provider contract and Brave implementation.
+- `src/lib/search`: replaceable search-provider contract and LangSearch implementation.
 - `src/lib/url-safety.ts`: pinned-IP, redirect-aware preview fetcher.
 - `supabase/migrations`: canonical Postgres schema, functions, triggers, and RLS.
 - `tests`: URL-safety, validation, and database security contract tests.
