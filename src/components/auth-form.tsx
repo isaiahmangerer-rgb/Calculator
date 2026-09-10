@@ -17,9 +17,13 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     if (mode === "sign-up") {
       const username = usernameSchema.safeParse(form.get("username")); const displayName = displayNameSchema.safeParse(form.get("displayName"));
       if (!username.success || !displayName.success) { setMessage(username.error?.issues[0]?.message || displayName.error?.issues[0]?.message || "Check your profile details."); setBusy(false); return; }
+      const { data: current } = await supabase.auth.getUser();
+      if (current.user?.is_anonymous) await supabase.auth.signOut();
       const { error } = await supabase.auth.signUp({ email, password, options: { data: { username: username.data, display_name: displayName.data }, emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile` } });
       setMessage(error?.message || "Check your email to confirm your Nexus account.");
     } else {
+      const { data: current } = await supabase.auth.getUser();
+      if (current.user?.is_anonymous) await supabase.auth.signOut();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage(error.message); else { router.push("/rooms/general"); router.refresh(); }
     }

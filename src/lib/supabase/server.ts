@@ -23,3 +23,8 @@ export async function getViewer() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
+
+export async function getPermanentViewer() {
+  const user = await getViewer();
+  return user && !user.is_anonymous ? user : null;
+}

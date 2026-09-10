@@ -3,6 +3,7 @@
 import { CornerUpLeft, Edit3, Flag, Hash, LoaderCircle, MoreHorizontal, Send, SmilePlus, Trash2, Users } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "@/components/app-frame";
+import { getOrCreateChatIdentity, guestChatEnabled } from "@/lib/guest-chat";
 import { createClient } from "@/lib/supabase/client";
 
 type Profile = { id: string; username: string; display_name: string; avatar_url: string | null };
@@ -10,6 +11,29 @@ type Message = { id: string; room_id: string; sender_id: string; content: string
 type Room = { id: string; name: string; slug: string; description: string };
 
 export function RoomChat({ slug }: { slug: string }) {
+  const supabase = useMemo(() => createClient(), []);
+  const [ready, setReady] = useState(false);
+  const [guestError, setGuestError] = useState("");
+
+  useEffect(() => {
+    if (!supabase) { setReady(true); return; }
+    let active = true;
+    void getOrCreateChatIdentity(supabase)
+      .then(() => { if (active) setReady(true); })
+      .catch((reason) => {
+        if (!active) return;
+        setGuestError(reason instanceof Error ? reason.message : "Guest chat is unavailable.");
+        setReady(true);
+      });
+    return () => { active = false; };
+  }, [supabase]);
+
+  if (!ready) return <div className="state-card"><LoaderCircle className="spin" /> Creating your guest chat session…</div>;
+  if (guestError) return <div className="state-card error-state"><Hash /><strong>Guest chat needs one setting.</strong><p>{guestError}</p>{!guestChatEnabled && <a className="primary-button" href="/sign-in">Sign in instead</a>}</div>;
+  return <AuthenticatedRoomChat slug={slug} />;
+}
+
+function AuthenticatedRoomChat({ slug }: { slug: string }) {
   const supabase = useMemo(() => createClient(), []); const bottomRef = useRef<HTMLDivElement>(null); const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [room, setRoom] = useState<Room | null>(null); const [messages, setMessages] = useState<Message[]>([]); const [viewerId, setViewerId] = useState(""); const [content, setContent] = useState(""); const [reply, setReply] = useState<Message | null>(null); const [typing, setTyping] = useState<string[]>([]); const [error, setError] = useState(""); const [loading, setLoading] = useState(true); const channelRef = useRef<ReturnType<NonNullable<typeof supabase>["channel"]> | null>(null);
   const loadMessages = useCallback(async (roomId: string) => {

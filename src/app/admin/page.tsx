@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { AppFrame } from "@/components/app-frame";
 import { AdminDashboard } from "@/components/admin-dashboard";
-import { createClient, getViewer } from "@/lib/supabase/server";
+import { createClient, getPermanentViewer } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Admin" };
 export default async function AdminPage() {
-  const viewer = await getViewer(); const supabase = await createClient();
+  const viewer = await getPermanentViewer(); const supabase = await createClient();
   if (!viewer || !supabase) return <AppFrame title="Admin"><div className="state-card"><strong>Administrator sign-in required.</strong><a className="primary-button" href="/sign-in">Sign in</a></div></AppFrame>;
   const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", viewer.id).eq("role", "admin").maybeSingle();
   if (!role) return <AppFrame title="Admin"><div className="state-card error-state"><strong>Access denied.</strong><p>Administrator permissions are verified on the server and in the database.</p></div></AppFrame>;

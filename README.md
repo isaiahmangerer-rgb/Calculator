@@ -5,6 +5,7 @@ Nexus is a production-oriented social search website built with Next.js 16, Type
 ## What is implemented
 
 - Supabase email/password sign-up, sign-in, sign-out, session refresh, unique usernames, profiles, and avatar uploads.
+- Optional zero-form guest access to public rooms through Supabase Anonymous Sign-Ins. Guests receive temporary display names automatically; private account features remain restricted.
 - Default General, Gaming, Technology, and Random rooms with realtime messages, edits, soft deletion, replies, reactions, typing broadcasts, read state, and unread counts.
 - Private two-person conversations with realtime history, last-message previews, typing-ready channels, read state, and database-enforced participant access.
 - Friend requests, accept/decline, removal, online presence, user blocking, local muting, and private reports.
@@ -31,6 +32,7 @@ Use `npm run check` for linting, TypeScript, unit/security contract tests, and t
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser-safe | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser-safe | Supabase anonymous key; RLS is still required |
+| `NEXT_PUBLIC_GUEST_CHAT_ENABLED` | Browser-safe | Enables automatic temporary guest sessions after the guest-chat migration is applied |
 | `NEXT_PUBLIC_SITE_URL` | Browser-safe | Canonical deployed origin |
 | `LANGSEARCH_API_KEY` | Server secret | Free LangSearch Web Search API credential |
 | `SEARCH_API_PROVIDER` | Server | Currently `langsearch`; provider interface remains replaceable |
@@ -45,6 +47,10 @@ Never commit `.env.local`, service-role keys, search keys, or Vercel tokens. The
 ## Supabase setup
 
 Apply the migration through the Supabase SQL editor or CLI. It creates the schema, indexes, triggers, helper functions, default rooms, Storage avatar bucket, Realtime publication entries, and RLS policies.
+
+For guest public-room chat, apply `supabase/migrations/202609100001_guest_public_chat.sql`, then enable **Allow anonymous sign-ins** in Supabase Authentication settings. Only after both steps are complete, set `NEXT_PUBLIC_GUEST_CHAT_ENABLED=true` in Vercel and redeploy. Guest sessions can read and participate in public rooms, react, report, and manage their own room messages. Restrictive RLS policies prevent them from using private DMs, friends, roles, profile editing, and avatar uploads.
+
+Supabase recommends CAPTCHA protection for anonymous sign-ins and rate-limits anonymous account creation by IP. Nexus additionally applies application and database message throttles. Anonymous accounts are durable so their message attribution remains intact; a trusted, unscheduled `cleanup_guest_accounts` function is included for operators who intentionally choose a retention policy.
 
 To appoint the first administrator, replace the UUID and run this once from the SQL editor (service-role context):
 
@@ -69,7 +75,7 @@ The default Vercel build command is `npm run build`. No desktop runtime, browser
 - `src/lib/supabase`: cookie-safe browser/server Supabase clients.
 - `src/lib/search`: replaceable search-provider contract and LangSearch implementation.
 - `src/lib/url-safety.ts`: pinned-IP, redirect-aware preview fetcher.
-- `supabase/migrations`: canonical Postgres schema, functions, triggers, and RLS.
+- `supabase/migrations`: canonical Postgres schema, functions, triggers, guest isolation, and RLS.
 - `tests`: URL-safety, validation, and database security contract tests.
 
 See `SECURITY.md` for the threat model and preview protections.

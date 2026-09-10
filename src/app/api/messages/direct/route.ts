@@ -3,10 +3,10 @@ import { env } from "@/lib/env";
 import { moderateMessage } from "@/lib/moderation";
 import { rateLimit } from "@/lib/rate-limit";
 import { directMessageSchema } from "@/lib/schemas";
-import { createClient, getViewer } from "@/lib/supabase/server";
+import { createClient, getPermanentViewer } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
-  const viewer = await getViewer(); if (!viewer) return NextResponse.json({ error: "Sign in to send messages." }, { status: 401 });
+  const viewer = await getPermanentViewer(); if (!viewer) return NextResponse.json({ error: "Create an account to send private messages." }, { status: 401 });
   const limited = rateLimit(`dm:${viewer.id}`, env.MESSAGE_RATE_LIMIT_PER_MINUTE); if (!limited.allowed) return NextResponse.json({ error: "You’re sending messages too quickly." }, { status: 429 });
   const parsed = directMessageSchema.safeParse(await request.json().catch(() => null)); if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid message." }, { status: 400 });
   const moderation = moderateMessage(parsed.data.content); if (!moderation.allowed) return NextResponse.json({ error: moderation.reason }, { status: 422 });
